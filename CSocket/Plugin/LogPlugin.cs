@@ -55,7 +55,7 @@ namespace CSocket.Plugin
 
         public void OnIDChanged(ITcpClientBase client, TouchSocketEventArgs e)
         {
-            Console.WriteLine($"ClientID被更改{}");
+            Console.WriteLine($"ClientID被更改");
         }
 
         public Task OnIDChangedAsync(ITcpClientBase client, TouchSocketEventArgs e)
