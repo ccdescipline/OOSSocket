@@ -1,6 +1,7 @@
 ﻿using CSocket.Command;
 using CSocket.Filter;
 using CSocket.Interface;
+using CSocket.PackageTemplate;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -251,12 +252,26 @@ namespace CSocket
             //判断是否是断线重连
             if (string.IsNullOrEmpty(this.clientID))
             {
+                Console.WriteLine("第一次连接服务器");
                 //获取服务器的ClientID
-
+                CommandPackage commandPackage = this.SendPackage<CommandPackage>(new CommandPackage("ReconnectCommand -GetClientID 0"));
+                string? clientID = commandPackage.Parameters["ClientID"]?.ToString();
+                if (string.IsNullOrEmpty(clientID))
+                {
+                    throw new CSocketException("获取ClientId失败");
+                }
+                this.clientID = clientID;
+                Console.WriteLine($"clientID : {clientID}");
             }
             else
             {
                 //提交服务器本次clientID
+                Console.WriteLine("重连中...");
+                CommandPackage commandPackage = this.SendPackage<CommandPackage>(new CommandPackage($"ReconnectCommand -SetClientID {this.clientID}"));
+                if (commandPackage.Parameters["Status"].ToString()== "200")
+                {
+                    Console.WriteLine("提交clientID成功！");
+                }
             }
 
             base.OnConnected(e);
