@@ -20,7 +20,7 @@ namespace CSocket
     /// </summary>
     /// <typeparam name="Translate">编解码器</typeparam>
     /// <typeparam name="Serialize">序列化器</typeparam>
-    public class CTcpClient<Translate, Serialize> : TcpClientBase
+    public class CTcpClient<Translate, Serialize> : TcpClientBase, ITcpInteractive
         where Translate : IPackageTranslate, new()
         where Serialize : IBodyTranslate, new()
     {
@@ -121,49 +121,52 @@ namespace CSocket
         }
 
 
-        //public async Task<ResultType?> SendPackage<ResultType>(CPackage package)
-        //    where ResultType : CPackage, new()
-        //{
-        //    //checkType = typeof(ResultType);
+        public async Task<ResultType?> SendPackage<ResultType>(CPackage package)
+            where ResultType : CPackage, new()
+        {
+            //checkType = typeof(ResultType);
 
-        //    //this.SendPackage(package);
+            //this.SendPackage(package);
 
-        //    //await Task.Run(() => {
-        //    //    while (!isRecvPackage)
-        //    //    {
+            //await Task.Run(() => {
+            //    while (!isRecvPackage)
+            //    {
 
-        //    //    }
+            //    }
 
-        //    //    isRecvPackage = false;
-        //    //});
-
-
-        //    //return 
-
-        //    ResultType? returnValue = await Task.Run( () => {
-
-        //        ResultType res = null;
-        //        this.SendPackage<ResultType>(package, (client, cmd, p) => {
-        //            res = p;
-        //        });
-
-        //        while (res==null)
-        //        {
-
-        //        }
-
-        //        return res;
-        //    });
+            //    isRecvPackage = false;
+            //});
 
 
-        //    return returnValue;
-        //}
+            //return 
 
-        public ResultType SendPackage<ResultType>(CPackage package)
+            ResultType? returnValue = await Task.Run(() =>
+            {
+
+                ResultType res = null;
+                this.SendPackage<ResultType>(package, (client, cmd, p) =>
+                {
+                    res = p;
+                });
+
+                while (res == null)
+                {
+                    Thread.Sleep(100);
+                }
+
+                return res;
+            });
+
+
+            return returnValue;
+        }
+
+        public ResultType SendPackage1<ResultType>(CPackage package)
             where ResultType : CPackage, new()
         {
             ResultType res = null;
-            this.SendPackage<ResultType>(package, (client, cmd, p) => {
+            this.SendPackage<ResultType>(package, (client, cmd, p) =>
+            {
                 res = p;
             });
 
@@ -174,13 +177,13 @@ namespace CSocket
 
             return res;
         }
-        
+
         /// <summary>
-         /// 将数据包通过编码器编码成流数据
-         /// </summary>
-         /// <typeparam name="T"></typeparam>
-         /// <param name="package"></param>
-         /// <returns></returns>
+        /// 将数据包通过编码器编码成流数据
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="package"></param>
+        /// <returns></returns>
         ByteBlock translatePackage(CPackage package)
         {
             List<byte> bufer_List = new List<byte>();
@@ -211,31 +214,34 @@ namespace CSocket
         /// <param name="requestInfo"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            //原始json
-            string jsonStr = TranslateCompoment.Decoder(
-                    (requestInfo as MyFixedHeaderRequestInfo).Body
-                    );
+            ////原始json
+            //string jsonStr = TranslateCompoment.Decoder(
+            //        (requestInfo as MyFixedHeaderRequestInfo).Body
+            //        );
 
-            //解析数据
-            CPackage? Ipackage = bodyTranslate.Deserialize<CPackage>(
-                jsonStr
-                );
+            ////解析数据
+            //CPackage? Ipackage = bodyTranslate.Deserialize<CPackage>(
+            //    jsonStr
+            //    );
 
-            //实例化包（根据程序集和类名）
-            
-            ObjectHandle? obj = Activator.CreateInstance(Ipackage.Assembly, Ipackage.FullName);
+            ////实例化包（根据程序集和类名）
 
-            //调用反序列化方法
-            object? resPackage = bodyTranslate.GetType().GetMethod("Deserialize")?.MakeGenericMethod(new Type[] { obj.Unwrap().GetType() })
-                .Invoke(bodyTranslate, new object?[] {
-                            jsonStr
-                });
+            //ObjectHandle? obj = Activator.CreateInstance(Ipackage.Assembly, Ipackage.FullName);
+
+            ////调用反序列化方法
+            //object? resPackage = bodyTranslate.GetType().GetMethod("Deserialize")?.MakeGenericMethod(new Type[] { obj.Unwrap().GetType() })
+            //    .Invoke(bodyTranslate, new object?[] {
+            //                jsonStr
+            //    });
+
+            object? resPackage = CPackage.ConvertPackage(TranslateCompoment, bodyTranslate,
+                (requestInfo as MyFixedHeaderRequestInfo).Body);
 
             //调用事件
-            Received.Invoke(this,Ipackage.Command, resPackage);
+            Received.Invoke(this,(resPackage as CPackage).Command, resPackage);
 
             //sendpackage回调
-            SendPackageRecvCallback?.Invoke(this, Ipackage.Command, resPackage);
+            SendPackageRecvCallback?.Invoke(this, (resPackage as CPackage).Command, resPackage);
 
             //if (CPackage.IsEqualpackage(Ipackage,checkType))
             //{
@@ -249,30 +255,32 @@ namespace CSocket
         {
             Console.WriteLine("连接服务器...");
 
-            //判断是否是断线重连
-            if (string.IsNullOrEmpty(this.clientID))
-            {
-                Console.WriteLine("第一次连接服务器");
-                //获取服务器的ClientID
-                CommandPackage commandPackage = this.SendPackage<CommandPackage>(new CommandPackage("ReconnectCommand -GetClientID 0"));
-                string? clientID = commandPackage.Parameters["ClientID"]?.ToString();
-                if (string.IsNullOrEmpty(clientID))
-                {
-                    throw new CSocketException("获取ClientId失败");
-                }
-                this.clientID = clientID;
-                Console.WriteLine($"clientID : {clientID}");
-            }
-            else
-            {
-                //提交服务器本次clientID
-                Console.WriteLine("重连中...");
-                CommandPackage commandPackage = this.SendPackage<CommandPackage>(new CommandPackage($"ReconnectCommand -SetClientID {this.clientID}"));
-                if (commandPackage.Parameters["Status"].ToString()== "200")
-                {
-                    Console.WriteLine("提交clientID成功！");
-                }
-            }
+            ////判断是否是断线重连
+            //if (string.IsNullOrEmpty(this.clientID))
+            //{
+            //    Console.WriteLine("第一次连接服务器");
+            //    //获取服务器的ClientID
+            //    CommandPackage commandPackage = this.SendPackage<CommandPackage>(new CommandPackage("ReconnectCommand -GetClientID 0"));
+            //    string? clientID = commandPackage.Parameters["ClientID"]?.ToString();
+            //    if (string.IsNullOrEmpty(clientID))
+            //    {
+            //        throw new CSocketException("获取ClientId失败");
+            //    }
+            //    this.clientID = clientID;
+            //    Console.WriteLine($"clientID : {clientID}");
+            //}
+            //else
+            //{
+            //    //提交服务器本次clientID
+            //    Console.WriteLine("重连中...");
+            //    CommandPackage commandPackage = this.SendPackage<CommandPackage>(new CommandPackage($"ReconnectCommand -SetClientID {this.clientID}"));
+            //    if (commandPackage.Parameters["Status"].ToString()== "200")
+            //    {
+            //        Console.WriteLine("提交clientID成功！");
+            //    }
+            //}
+
+
 
             base.OnConnected(e);
         }

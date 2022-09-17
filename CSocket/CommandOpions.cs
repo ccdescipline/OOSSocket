@@ -13,18 +13,18 @@ namespace CSocket
 {
     public class CommandOpions
     {
-        private List<Type> _CommandList;
+        private List<ICommand> _CommandList;
 
-        private List<Type> _FilterTypes;
+        private List<ICommandFilter> _FilterTypes;
 
-        public CommandOpions(List<Type> Ls, List<Type> Fs)
+        public CommandOpions(List<ICommand> Ls, List<ICommandFilter> Fs)
         {
             _CommandList = Ls;
             _FilterTypes = Fs;
         }
 
-        public List<Type> CommandList { get => _CommandList; }
-        public List<Type> FilterTypes { get => _FilterTypes; }
+        public List<ICommand> CommandList { get => _CommandList; }
+        public List<ICommandFilter> FilterTypes { get => _FilterTypes; }
 
         /// <summary>
         /// 添加命令
@@ -32,7 +32,7 @@ namespace CSocket
         /// <typeparam name="T1"></typeparam>
         public void AddCommand<T1>() where T1 : ICommand, new()
         {
-            CommandList.Add(typeof(T1));
+            CommandList.Add(Activator.CreateInstance(typeof(T1))as ICommand);
         }
 
         /// <summary>
@@ -40,12 +40,17 @@ namespace CSocket
         /// </summary>
         /// <param name="Assembly"></param>
         public void AddCommand(Assembly Assembly) {
-            _CommandList.AddRange(Assembly.GetTypes()
+            List<Type> commandList =  (Assembly.GetTypes()
                    .Where(s => s.GetInterfaces()
                        .Where(s => s.IsGenericType)
                        .Select(s => s.GetGenericTypeDefinition())
                        .Contains(typeof(IPackageCommand<>))
                    ).ToList());
+
+            foreach (Type item in commandList)
+            {
+                CommandList.Add(Activator.CreateInstance(item) as ICommand);
+            }
         }
 
         /// <summary>
@@ -54,7 +59,7 @@ namespace CSocket
         /// <typeparam name="T2"></typeparam>
         public void AddFilter<T2>() where T2 : ICommandFilter, new()
         {
-            FilterTypes.Add(typeof(T2));
+            FilterTypes.Add(Activator.CreateInstance(typeof(T2)) as ICommandFilter);
         }
 
     }

@@ -10,6 +10,7 @@ using CSocket.Plugin;
 using System.Runtime.CompilerServices;
 using System.Reflection;
 using System;
+using TestServer.LoginService;
 
 Console.WriteLine("Hello, World!");
 
@@ -64,15 +65,15 @@ server
         //options.AddCommand<VoiceCmdCommand>();
 
         //添加filter
-        //options.AddFilter<LoginFilter>();
+        options.AddFilter<LoginFilter>();
 
         //options.AddCommand(typeof(TestCommand).Assembly);
         options.AddCommand(Assembly.GetExecutingAssembly());
     })
-    .AddEventDisconnect((client,e) => {
-        VoiceRoomCenter.leaveRoom(client.ID);
+    //.AddEventDisconnect((client,e) => {
+    //    VoiceRoomCenter.leaveRoom(client.ID);
     
-    })
+    //})
     
     .Setup(
         new TouchSocketConfig()//载入配置     
@@ -82,6 +83,7 @@ server
         .ConfigurePlugins(a => {
             //添加日志插件
             a.Add(new LogPlugin());
+            a.Add<VoivcePlugin>();
         })
         .UsePlugin()
     )

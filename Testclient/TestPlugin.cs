@@ -1,32 +1,32 @@
-﻿using System;
+﻿using CSocket.Interface;
+using SharedPackage.Login;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
-using TouchSocket.Core.Extensions;
-using CSocket.Compoments;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Sockets.Plugins;
 
-namespace CSocket.Plugin
+namespace Testclient
 {
-    public class LogPlugin : ITcpPlugin
+    internal class TestPlugin : ITcpPlugin
     {
-        
-        private int order = 1;
-        public int Order { get => order; set => order = value; }
+
+        public int Order { get; set; } = 1;
 
         public void Dispose()
         {
+            
         }
 
         public void OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
         {
+            Console.WriteLine("开始登陆...");
+           (client as ITcpInteractive).SendPackage(new LoginPackage("admin","123456"));
+
         }
-        
+
         public Task OnConnectedAsync(ITcpClientBase client, TouchSocketEventArgs e)
         {
             return Task.CompletedTask;
@@ -34,22 +34,17 @@ namespace CSocket.Plugin
 
         public void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
         {
-            //client.Logger.Warning($"IP: {client.IP} Port：{client.Port} 连接");
-            CLog.Message($"IP: {client.IP} Port：{client.Port} 连接");
-
+           
         }
 
         public Task OnConnectingAsync(ITcpClientBase client, ClientOperationEventArgs e)
         {
-           return Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
         public void OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
         {
-            //client.Logger.Message($"IP: {client.IP} Port：{client.Port} 断开连接");
-
             
-            CLog.Message($"IP: {client.IP} Port：{client.Port} clientId: {(client as CSocketClient).ID} 断开连接");
         }
 
         public Task OnDisconnectedAsync(ITcpClientBase client, ClientDisconnectedEventArgs e)
@@ -57,24 +52,19 @@ namespace CSocket.Plugin
             return Task.CompletedTask;
         }
 
-
         public void OnIDChanged(ITcpClientBase client, IDChangedEventArgs e)
         {
-            Console.WriteLine($"ClientID被更改,oldValue: {e.OldID}, NewValue: {e.NewID}");
-        }
-
-        public Task OnIDChangedAsync(ITcpClientBase client, TouchSocketEventArgs e)
-        {
-            return Task.CompletedTask;
+            
         }
 
         public Task OnIDChangedAsync(ITcpClientBase client, IDChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public void OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e)
         {
+            
         }
 
         public Task OnReceivedDataAsync(ITcpClientBase client, ReceivedDataEventArgs e)
@@ -94,6 +84,7 @@ namespace CSocket.Plugin
 
         public void OnSendingData(ITcpClientBase client, SendingEventArgs e)
         {
+            
         }
 
         public Task OnSendingDataAsync(ITcpClientBase client, SendingEventArgs e)

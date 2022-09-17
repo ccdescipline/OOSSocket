@@ -1,10 +1,12 @@
-﻿using System;
+﻿using CSocket;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
+using TouchSocket.Sockets.Plugins;
 
 namespace TestServer.VoiceProc
 {
@@ -13,82 +15,93 @@ namespace TestServer.VoiceProc
     /// </summary>
     internal class VoivcePlugin : ITcpPlugin
     {
-        public int Order { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public int Order { get; set; } = 1;
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            
         }
 
         public void OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
         {
-            throw new NotImplementedException();
+            
         }
 
         public Task OnConnectedAsync(ITcpClientBase client, TouchSocketEventArgs e)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
         {
-            throw new NotImplementedException();
+            
         }
 
         public Task OnConnectingAsync(ITcpClientBase client, ClientOperationEventArgs e)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public void OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
         {
-            throw new NotImplementedException();
+            //判断是否是服务端
+            if (client == null)
+            {
+                return;
+            }
+
+            //clientId 离开房间
+            VoiceRoomCenter.leaveRoom((client as CSocketClient).ID);
+            Console.WriteLine($"{(client as CSocketClient).ID} 断线离开语音服务器");
         }
 
         public Task OnDisconnectedAsync(ITcpClientBase client, ClientDisconnectedEventArgs e)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
-        public void OnIDChanged(ITcpClientBase client, TouchSocketEventArgs e)
+
+
+        public void OnIDChanged(ITcpClientBase client, IDChangedEventArgs e)
         {
-           
-            throw new NotImplementedException();
+             
         }
 
-        public Task OnIDChangedAsync(ITcpClientBase client, TouchSocketEventArgs e)
+
+        public Task OnIDChangedAsync(ITcpClientBase client, IDChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public void OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e)
         {
-            throw new NotImplementedException();
+             
         }
 
         public Task OnReceivedDataAsync(ITcpClientBase client, ReceivedDataEventArgs e)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public void OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
         {
-            throw new NotImplementedException();
+            
         }
 
         public Task OnReceivingDataAsync(ITcpClientBase client, ByteBlockEventArgs e)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public void OnSendingData(ITcpClientBase client, SendingEventArgs e)
         {
-            throw new NotImplementedException();
+             
         }
 
         public Task OnSendingDataAsync(ITcpClientBase client, SendingEventArgs e)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
     }
 }

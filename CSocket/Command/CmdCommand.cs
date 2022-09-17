@@ -16,13 +16,22 @@ namespace CSocket.Command
 
         public CPackage? ExecuteCmd(CSocketClient socketClient , CommandPackage package )
         {
-            Console.WriteLine($"指令名： {package.Instruct}");
-            foreach (var item in package.Parameters)
+            
+            //Console.WriteLine(this.GetType().Name);
+
+            //判断是否是继承类
+            if (this.GetType() == typeof(CmdCommand))
             {
-                Console.WriteLine($"参数名：[{item.Key}] ，参数值 ：[{item.Value}]");
+                //否
+                return OnExecuteCmd(socketClient, package);
+            }
+            else
+            {
+                //是
+                return CheckInstruct(socketClient, package);
             }
 
-            return CheckInstruct(socketClient, package);
+            
 
            // return null;
             //socketClient.SendPackage(package);
@@ -36,17 +45,18 @@ namespace CSocket.Command
         /// <returns></returns>
         protected virtual CPackage? OnExecuteCmd(CSocketClient socketClient, CommandPackage package)
         {
-            return null;
+            Console.WriteLine($"指令名： {package.Instruct}");
+            foreach (var item in package.Parameters)
+            {
+                Console.WriteLine($"参数名：[{item.Key}] ，参数值 ：[{item.Value}]");
+            }
+            return package;
         }
 
         private CPackage? CheckInstruct(CSocketClient socketClient, CommandPackage package)
         {
             string _instruct;
             Type thistype = this.GetType();
-            if (thistype.Name == typeof(CmdCommand).Name)
-            {
-                return null;
-            }
 
             //获取特性
             CmdAttribute? cmdAttribute = thistype.GetCustomAttribute<CmdAttribute>();

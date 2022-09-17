@@ -62,19 +62,19 @@ using CSocket.Command;
 
 
 
+Console.WriteLine("Hello, World!");
+Programe1.Main(null);
 
 
-
-
-public class Programe
+public class Programe1
 {
     static CTcpClient<DefaulPackageTranslate, JsonSerializeTranslate> client = new CTcpClient<DefaulPackageTranslate, JsonSerializeTranslate>();
     static WasapiCapture waveIn;
-    public static void Main( string [] args)
+    public static async void Main( string [] args)
     {
         Console.WriteLine("Hello, World!");
 
-        Console.WriteLine("Hello, World!");
+        
 
         
 
@@ -117,6 +117,7 @@ public class Programe
             .UsePlugin()
             .ConfigurePlugins(a =>
             {
+                a.Add<TestPlugin>();
                 a.UseReconnection(5, true, 1000);
             });
 
@@ -141,7 +142,7 @@ public class Programe
 
             Console.WriteLine("输入命令");
 
-            CommandPackage commandPackage = client.SendPackage<CommandPackage>(new CommandPackage(Console.ReadLine()));
+            CommandPackage commandPackage =client.SendPackage1<CommandPackage>(new CommandPackage(Console.ReadLine()));
             Console.WriteLine(commandPackage);
         }
 
@@ -270,11 +271,11 @@ public class Programe
         return new WasapiCapture(devices[Convert.ToInt32(res) - 1], false, 1000);
     }
 
-    static void QueryVoiceRoom()
+    static async void QueryVoiceRoom()
     {
        
         //查询房间信息
-        CommandPackage? resPackage = client.SendPackage<CommandPackage>(new CommandPackage("VoiceCMD -GetRoomsInfo 0"));
+        CommandPackage? resPackage =client.SendPackage1<CommandPackage>(new CommandPackage("VoiceCMD -GetRoomsInfo 0"));
         //Console.WriteLine("resPackage");
 
         List<VoiceRoom> res = client.bodyTranslate.Deserialize<List<VoiceRoom>>(resPackage.Parameters["res"].ToString());

@@ -28,8 +28,17 @@ namespace CSocket.Command
 
             if (package.Parameters.Keys.Contains("SetClientID"))
             {
-                socketClient.ResetID(package.Parameters["SetClientID"].ToString());
-                return new CommandPackage($"ReconnectCommand -Status 200");
+                try
+                {
+                    socketClient.ResetID(package.Parameters["SetClientID"].ToString());
+                    return new CommandPackage($"ReconnectCommand -Status 200");
+                }
+                catch (Exception e)
+                {
+                    return new CommandPackage($"ReconnectCommand -Status 500 -Msg {e.Message}");
+                }
+
+
             }
             return package;
         }

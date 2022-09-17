@@ -12,17 +12,19 @@ namespace CSocket.Filter
 {
     public struct CommandExecutingContext
     {
-        public SocketClient commandContext;
+        public SocketClient CurrentContext;
         public ByteBlock byteBlock;
         public IRequestInfo requestInfo;
         public CPackage package;
+        public SocketClient[] Clients;
 
-        public CommandExecutingContext(SocketClient commandContext, ByteBlock byteBlock, IRequestInfo requestInfo, CPackage package)
+        public CommandExecutingContext(SocketClient currentContext, ByteBlock byteBlock, IRequestInfo requestInfo, CPackage package, SocketClient[] clients)
         {
-            this.commandContext = commandContext;
+            CurrentContext = currentContext;
             this.byteBlock = byteBlock;
             this.requestInfo = requestInfo;
             this.package = package;
+            Clients = clients;
         }
     }
 }

@@ -37,24 +37,29 @@ namespace CSocket
         /// <summary>
         /// 命令列表
         /// </summary>
-        private List<Type> Commandtype;
+        private List<ICommand> Commandtype;
 
         /// <summary>
         /// 过滤器列表
         /// </summary>
-        private List<Type> Filtertypes;
+        private List<ICommandFilter> Filtertypes;
 
         public CTcpServer()
         {
             //遍历所有的Command
-            Commandtype = typeof(IPackageCommand<>).Assembly.GetTypes()
+            Commandtype = new List<ICommand>();
+            List<Type> commandList = typeof(IPackageCommand<>).Assembly.GetTypes()
                    .Where(s => s.GetInterfaces()
                        .Where(s => s.IsGenericType)
                        .Select(s => s.GetGenericTypeDefinition())
                        .Contains(typeof(IPackageCommand<>))
                    ).ToList();
+            foreach (Type type in commandList)
+            {
+                Commandtype.Add(Activator.CreateInstance(type) as ICommand);
+            }
 
-            Filtertypes = new List<Type>();
+            Filtertypes = new List<ICommandFilter>();
 
             //实例化编解码器
             this.TranslateCompoment = new Translate();
@@ -88,7 +93,7 @@ namespace CSocket
 
             //执行过滤器
             ExecuteFilter(socketClient, byteBlock, requestInfo);
-
+            
 
             base.OnReceived(socketClient, byteBlock, requestInfo);
         }
@@ -119,14 +124,14 @@ namespace CSocket
         /// <summary>
         /// 断开连接时
         /// </summary>
-        public event Action<CSocketClient,ClientDisconnectedEventArgs> OnDisconnect;
+        public event Action<CSocketClient,ClientDisconnectedEventArgs>? OnDisconnect;
 
         protected override void OnDisconnected(CSocketClient socketClient, ClientDisconnectedEventArgs e)
         {
             //Console.WriteLine("客户端断开");
 
             //调用断开事件
-            OnDisconnect.Invoke(socketClient,e);
+            OnDisconnect?.Invoke(socketClient,e);
 
             base.OnDisconnected(socketClient, e);
         }
@@ -178,15 +183,17 @@ namespace CSocket
                // TcpPluginBase
 
             //遍历所有command
-            foreach (Type type in Commandtype)
+            foreach (ICommand item in Commandtype)
             {
 
                 //var cmdNameProperty = type.GetProperty("CmdName");
                 //string? cmdName = cmdNameProperty?.GetValue(null, null) as string;
 
                 //根据command 拿 IPackageCommand 的接口泛型
+                Type type = item.GetType();
 
                 Type? IPackageCommand_Generic = type.GetInterfaces()
+                    
                     .First(x => { return x.Name == typeof(IPackageCommand<>).Name; })
                     .GetGenericArguments()[0];
 
@@ -196,33 +203,35 @@ namespace CSocket
 
                 //判断命令类型
                 //if (cmdName == Ipackage.Command)
-                if(CPackage.IsEqualpackage(Ipackage, IPackageCommand_Generic))
+                if (CPackage.IsEqualpackage(Ipackage, IPackageCommand_Generic))
                 {
                     //实例化
-                    object? Instance = Activator.CreateInstance(type);
+                    object? Instance = item;
 
                     //调用反序列化方法
                     //MethodInfo? method_Deserialize = type.GetMethod("Deserialize");
                     //object? resPackage = method_Deserialize?.Invoke(Instance, new object[] { (requestInfo as MyFixedHeaderRequestInfo).Body });
 
                     //获取command 的 package类型
-                    Type Generic = type.GetInterfaces().First(x => x.Name.Contains(typeof(IPackageCommand<>).Name)).GetGenericArguments()[0];
+                    //Type Generic = type.GetInterfaces().First(x => x.Name.Contains(typeof(IPackageCommand<>).Name)).GetGenericArguments()[0];
 
-                    //构造包解析器反射
-                    Type bodyTranslate_Type = bodyTranslate.GetType();
+                    ////构造包解析器反射
+                    //Type bodyTranslate_Type = bodyTranslate.GetType();
 
-                    //调用反序列化方法
-                    object? resPackage = bodyTranslate_Type.GetMethod("Deserialize")?.MakeGenericMethod(new Type[] { Generic })
-                        .Invoke(bodyTranslate,new object?[] {
-                            TranslateCompoment.Decoder(
-                                (requestInfo as MyFixedHeaderRequestInfo)?.Body
-                                )
-                        });
+                    ////调用反序列化方法
+                    //object? resPackage = bodyTranslate_Type.GetMethod("Deserialize")
+                    //    ?.MakeGenericMethod(new Type[] { Generic })
+                    //    .Invoke(bodyTranslate,new object?[] {
+                    //        TranslateCompoment.Decoder(
+                    //            (requestInfo as MyFixedHeaderRequestInfo)?.Body
+                    //            )
+                    //    });
 
+                    
 
                     //执行
                     MethodInfo? method_ExecuteCmd = type.GetMethod("ExecuteCmd");
-                    object? res = method_ExecuteCmd?.Invoke(Instance, new object[] { socketClient, resPackage });
+                    object? res = method_ExecuteCmd?.Invoke(Instance, new object[] { socketClient, Ipackage });
                     //判断空
                     if (res!=null)
                     {
@@ -246,21 +255,27 @@ namespace CSocket
         private void ExecuteFilter(CSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             //解析数据
-            CPackage? Ipackage = bodyTranslate.Deserialize<CPackage>(
-                TranslateCompoment.Decoder(
-                    (requestInfo as MyFixedHeaderRequestInfo).Body
-                    )
-                );
+            //CPackage? Ipackage = bodyTranslate.Deserialize<CPackage>(
+            //    TranslateCompoment.Decoder(
+            //        (requestInfo as MyFixedHeaderRequestInfo).Body
+            //        )
+            //    );
+
+            CPackage? Ipackage = (CPackage?)CPackage.ConvertPackage(TranslateCompoment, bodyTranslate,
+                (requestInfo as MyFixedHeaderRequestInfo).Body);
 
             //遍历所有过滤器
-            foreach (Type type in Filtertypes)
+            foreach (ICommandFilter Filter in Filtertypes)
             {
                 //实例化
-                object? Instance = Activator.CreateInstance(type);
+                //object? Instance = Activator.CreateInstance(type);
 
                 //调用OnCommandExecuting
-                MethodInfo? OnCommandExecuting = type.GetMethod("OnCommandExecuting");
-                bool? res =  OnCommandExecuting?.Invoke(Instance,new object?[] { new CommandExecutingContext(socketClient, byteBlock, requestInfo, Ipackage) }) as bool?;
+                //MethodInfo? OnCommandExecuting = type.GetMethod("OnCommandExecuting");
+                //bool? res =  OnCommandExecuting?.Invoke(Instance,new object?[] {  }) as bool?;
+
+                bool? res = Filter.OnCommandExecuting(
+                    new CommandExecutingContext(socketClient, byteBlock, requestInfo, Ipackage, this.GetClients()));
 
                 if (res == false)
                 {
@@ -272,15 +287,17 @@ namespace CSocket
             ExecuteCommands(socketClient, requestInfo, Ipackage);
 
             //遍历所有过滤器
-            foreach (Type type in Filtertypes)
+            foreach (ICommandFilter Filter in Filtertypes)
             {
-                //实例化
-                object? Instance = Activator.CreateInstance(type);
+                ////实例化
+                //object? Instance = Activator.CreateInstance(type);
 
-                //调用OnCommandExecuted
-                MethodInfo? OnCommandExecuting = type.GetMethod("OnCommandExecuted");
-                OnCommandExecuting?.Invoke(Instance, new object?[] { new CommandExecutingContext(socketClient, byteBlock, requestInfo, Ipackage) });
+                ////调用OnCommandExecuted
+                //MethodInfo? OnCommandExecuting = type.GetMethod("OnCommandExecuted");
+                //OnCommandExecuting?.Invoke(Instance, new object?[] { new CommandExecutingContext(socketClient, byteBlock, requestInfo, Ipackage, this.GetClients()) });
 
+                Filter.OnCommandExecuted(
+                    new CommandExecutingContext(socketClient, byteBlock, requestInfo, Ipackage, this.GetClients()));
             }
         }
     }
