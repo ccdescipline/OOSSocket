@@ -32,6 +32,7 @@ using System.Threading;
 //Console.WriteLine(typeof(Class1).GetInterfaces().First(x => { return x.Name.Contains("IBase"); }).GetGenericArguments()[0].Name);
 
 var ibase = typeof(IBase<>);
+Console.WriteLine(typeof(IBase<>).IsGenericType);
 //var res = typeof(Class1).GetInterfaces()
 //                        .Where(s => s.IsGenericType)
 //                        .Select(s => s.GetGenericTypeDefinition())

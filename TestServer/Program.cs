@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 using System.Reflection;
 using System;
 using TestServer.LoginService;
+using CSocket.Command;
 
 Console.WriteLine("Hello, World!");
 
@@ -64,11 +65,13 @@ server
         //options.AddCommand<VoiceBitCommand>();
         //options.AddCommand<VoiceCmdCommand>();
 
+
         //添加filter
-        options.AddFilter<LoginFilter>();
+        //options.AddFilter<LoginFilter>();
+        options.AddFilterByAssembly(Assembly.GetExecutingAssembly());
 
         //options.AddCommand(typeof(TestCommand).Assembly);
-        options.AddCommand(Assembly.GetExecutingAssembly());
+        options.AddCommandByAssembly(Assembly.GetExecutingAssembly());
     })
     //.AddEventDisconnect((client,e) => {
     //    VoiceRoomCenter.leaveRoom(client.ID);

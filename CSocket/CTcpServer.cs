@@ -48,18 +48,31 @@ namespace CSocket
         {
             //遍历所有的Command
             Commandtype = new List<ICommand>();
-            List<Type> commandList = typeof(IPackageCommand<>).Assembly.GetTypes()
-                   .Where(s => s.GetInterfaces()
-                       .Where(s => s.IsGenericType)
-                       .Select(s => s.GetGenericTypeDefinition())
-                       .Contains(typeof(IPackageCommand<>))
-                   ).ToList();
+            //List<Type> commandList = typeof(IPackageCommand<>).Assembly.GetTypes()
+            //       .Where(s => s.GetInterfaces()
+            //           .Where(s => s.IsGenericType)
+            //           .Select(s => s.GetGenericTypeDefinition())
+            //           .Contains(typeof(IPackageCommand<>))
+            //       ).ToList();
+
+            List<Type> commandList = CTools.GetClassByInterFace(typeof(IPackageCommand<>)).ToList();
+
             foreach (Type type in commandList)
             {
                 Commandtype.Add(Activator.CreateInstance(type) as ICommand);
             }
 
             Filtertypes = new List<ICommandFilter>();
+            //List<Type> FilterList = typeof(ICommandFilter).Assembly.GetTypes()
+            //       .Where(s => s.GetInterfaces()
+            //           .Contains(typeof(ICommandFilter))
+            //       ).ToList();
+            List<Type> FilterList = CTools.GetClassByInterFace(typeof(ICommandFilter)).ToList();
+
+            foreach (Type type in FilterList)
+            {
+                Filtertypes.Add(Activator.CreateInstance(type) as ICommandFilter);
+            }
 
             //实例化编解码器
             this.TranslateCompoment = new Translate();

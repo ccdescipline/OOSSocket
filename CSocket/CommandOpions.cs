@@ -1,4 +1,5 @@
 ﻿using CSocket.Command;
+using CSocket.Compoments;
 using CSocket.Filter;
 using CSocket.Interface;
 using System;
@@ -32,6 +33,11 @@ namespace CSocket
         /// <typeparam name="T1"></typeparam>
         public void AddCommand<T1>() where T1 : ICommand, new()
         {
+            if (CommandList.Where((x) => { return x.GetType() == typeof(T1); }).Count()>0)
+            {
+                throw new CSocketException("该command已在其中 the command is already contains");
+                return;
+            }
             CommandList.Add(Activator.CreateInstance(typeof(T1))as ICommand);
         }
 
@@ -39,17 +45,22 @@ namespace CSocket
         /// 添加程序集，自动扫描程序集下所有
         /// </summary>
         /// <param name="Assembly"></param>
-        public void AddCommand(Assembly Assembly) {
-            List<Type> commandList =  (Assembly.GetTypes()
-                   .Where(s => s.GetInterfaces()
-                       .Where(s => s.IsGenericType)
-                       .Select(s => s.GetGenericTypeDefinition())
-                       .Contains(typeof(IPackageCommand<>))
-                   ).ToList());
+        public void AddCommandByAssembly(Assembly Assembly) {
+            //List<Type> commandList =  (Assembly.GetTypes()
+            //       .Where(s => s.GetInterfaces()
+            //           .Where(s => s.IsGenericType)
+            //           .Select(s => s.GetGenericTypeDefinition())
+            //           .Contains(typeof(IPackageCommand<>))
+            //       ).ToList());
+
+            List<Type> commandList = CTools.GetClassByInterFace(typeof(IPackageCommand<>), Assembly).ToList();
 
             foreach (Type item in commandList)
             {
-                CommandList.Add(Activator.CreateInstance(item) as ICommand);
+                this.GetType().GetMethod("AddCommand")
+                    ?.MakeGenericMethod(new Type[] { item })
+                    .Invoke(this,null);
+                //CommandList.Add(Activator.CreateInstance(item) as ICommand);
             }
         }
 
@@ -59,7 +70,30 @@ namespace CSocket
         /// <typeparam name="T2"></typeparam>
         public void AddFilter<T2>() where T2 : ICommandFilter, new()
         {
+            if (CommandList.Where((x) => { return x.GetType() == typeof(T2); }).Count() > 0)
+            {
+                throw new CSocketException("该Filter已在其中 the Filter is already contains");
+                return;
+            }
             FilterTypes.Add(Activator.CreateInstance(typeof(T2)) as ICommandFilter);
+        }
+
+        public void AddFilterByAssembly(Assembly Assembly)
+        {
+            //List<Type> FilterList = (Assembly.GetTypes()
+            //       .Where(s => s.GetInterfaces()
+            //           .Contains(typeof(ICommandFilter))
+            //       ).ToList());
+
+            List<Type> FilterList = CTools.GetClassByInterFace(typeof(ICommandFilter), Assembly).ToList();
+
+            foreach (Type item in FilterList)
+            {
+                this.GetType().GetMethod("AddFilter")
+                    ?.MakeGenericMethod(new Type[] { item })
+                    .Invoke(this, null);
+                //FilterTypes.Add(Activator.CreateInstance(item) as ICommandFilter);
+            }
         }
 
     }
