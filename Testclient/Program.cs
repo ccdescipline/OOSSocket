@@ -74,45 +74,13 @@ public class Programe1
     {
         Console.WriteLine("Hello, World!");
 
-        
-
-        
-
         client.Received += (client, cmd, p) =>
         {
-            //if (cmd != "CommandPackage")
-            //{
-            //    return;
-            //}
-
-            //var package = p as CommandPackage;
-
-            //Console.WriteLine($"服务器返回数据：指令名： {package.Instruct}");
-            //foreach (var item in package.Parameters)
-            //{
-            //    Console.WriteLine($"参数名：[{item.Key}] ，参数值 ：[{item.Value}]");
-            //}
-
-            //if (package.Instruct == "GetRoomsInfo")
-            //{
-            //    List<VoiceRoom> res = client.bodyTranslate.Deserialize<List<VoiceRoom>>(package.Parameters["res"].ToString());
-            //    int index = 1;
-
-            //    foreach (VoiceRoom room in res)
-            //    {
-            //        Console.WriteLine($"{index})房间： {room.RoomName} ");
-            //    }
-            //}
-
+            //数据接收时
         };
 
         //声明配置
         TouchSocketConfig config = new TouchSocketConfig();
-        //39.107.96.100:7790
-        //39.107.96.100:7791
-        //127.0.0.1:7790
-        //172.86.125.153:7791
-
         config.SetRemoteIPHost(new IPHost("127.0.0.1:7790"))
             .UsePlugin()
             .ConfigurePlugins(a =>
@@ -141,7 +109,6 @@ public class Programe1
             //client.SendPackage(new TestUnknowPackage("test uknowpackage"));
 
             Console.WriteLine("输入命令");
-
             CommandPackage commandPackage =client.SendPackage1<CommandPackage>(new CommandPackage(Console.ReadLine()));
             Console.WriteLine(commandPackage);
         }

@@ -1,4 +1,4 @@
-﻿using CSocket.Attr;
+﻿using CSocket.Atrr;
 using CSocket.Interface;
 using CSocket.PackageTemplate;
 using System;

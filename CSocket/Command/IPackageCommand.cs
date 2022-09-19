@@ -9,7 +9,6 @@ namespace CSocket.Command
 {
     public interface IPackageCommand<T>: ICommand where T : CPackage
     {
-
         /// <summary>
         /// 执行命令
         /// </summary>

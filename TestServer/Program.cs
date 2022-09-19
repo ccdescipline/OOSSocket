@@ -12,6 +12,7 @@ using System.Reflection;
 using System;
 using TestServer.LoginService;
 using CSocket.Command;
+using CSocket.PackageTemplate;
 
 Console.WriteLine("Hello, World!");
 
@@ -53,31 +54,18 @@ void startTcpService()
         .Start();//启动
 }
 
-CTcpServer<DefaulPackageTranslate, JsonSerializeTranslate> server = new CTcpServer<DefaulPackageTranslate, JsonSerializeTranslate>();
+CTcpServer<DefaulPackageTranslate, JsonSerializeTranslate> server = 
+    new CTcpServer<DefaulPackageTranslate, JsonSerializeTranslate>();
 
 server
     //添加命令
     .UseCommand((options) => {
-        ////添加command
-        //options.AddCommand<TestCommand>();
-
-        ////声音command
-        //options.AddCommand<VoiceBitCommand>();
-        //options.AddCommand<VoiceCmdCommand>();
-
 
         //添加filter
-        //options.AddFilter<LoginFilter>();
         options.AddFilterByAssembly(Assembly.GetExecutingAssembly());
-
-        //options.AddCommand(typeof(TestCommand).Assembly);
+        //添加command
         options.AddCommandByAssembly(Assembly.GetExecutingAssembly());
     })
-    //.AddEventDisconnect((client,e) => {
-    //    VoiceRoomCenter.leaveRoom(client.ID);
-    
-    //})
-    
     .Setup(
         new TouchSocketConfig()//载入配置     
         .SetListenIPHosts(new IPHost[] { new IPHost(7790) })//同时监听两个地址  //new IPHost(7790) ,

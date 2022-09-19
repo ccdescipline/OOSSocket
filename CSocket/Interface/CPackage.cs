@@ -25,15 +25,6 @@ namespace CSocket.Interface
 
         protected string _fullName;
 
-
-
-
-        //public CPackage(string Command)
-        //{
-        //    _command = Command;
-        //}
-
-
         public CPackage()
         {
             //先看看有没有特性
